@@ -1,13 +1,18 @@
+// page.tsx
 "use client";
 
 import { useRef, useState } from "react";
 
-import AutodeskViewer from "@/components/AutodeskViewer";
+import AutodeskViewer, {
+  type AutodeskViewerHandle,
+} from "@/components/AutodeskViewer";
+import AnnotationToolbar from "@/components/AnnotationToolbar";
 import ModelSelector from "@/components/ModelSelector";
 import { uploadModel } from "@/api/modelApi";
 
 export default function Home() {
   const fileRef = useRef<HTMLInputElement>(null);
+  const viewerHandle = useRef<AutodeskViewerHandle | null>(null);
   const [uploading, setUploading] = useState(false);
   const [urn, setUrn] = useState("");
 
@@ -35,7 +40,7 @@ export default function Home() {
 
   return (
     <main className="flex min-h-screen flex-col">
-      <div className="flex gap-3 p-4 border-b">
+      <div className="flex gap-3 p-4 border-b items-center">
         <ModelSelector onSelect={setUrn} />
         <input
           type="file"
@@ -44,19 +49,34 @@ export default function Home() {
           onChange={handleFileChange}
         />
 
-        <button
-          disabled={uploading}
-          onClick={() => fileRef.current?.click()}
-          className="px-4 py-2 rounded bg-blue-600 text-white text-sm"
-        >
-          {uploading ? "Uploading..." : "Upload"}
-        </button>
+        <div className="relative ml-auto">
+          <button
+            disabled={uploading}
+            onClick={() => fileRef.current?.click()}
+            className="px-4 py-2 rounded bg-blue-600 text-white text-sm"
+          >
+            {uploading ? "Uploading..." : "Upload"}
+          </button>
+
+          <div className="fixed right-4 top-20 z-50">
+            <AnnotationToolbar
+              onArrow={() => viewerHandle.current?.invoke("line")}
+              onText={() => viewerHandle.current?.invoke("text")}
+              onSave={() => viewerHandle.current?.invoke("save")}
+              onClear={() => viewerHandle.current?.invoke("clear")}
+              onReload={() => viewerHandle.current?.invoke("reload")}
+              onPlaceImage={(dataUrl: string) =>
+                viewerHandle.current?.invoke("placeImage", dataUrl)
+              }
+            />
+          </div>
+        </div>
       </div>
 
       {urn && (
-        <div className="flex-1 min-h-0 overflow-hidden">
+        <div className="flex-1">
           <div className="h-full min-h-0">
-            <AutodeskViewer urn={urn} />
+            <AutodeskViewer ref={viewerHandle} urn={urn} />
           </div>
         </div>
       )}
