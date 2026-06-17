@@ -37,7 +37,6 @@ export default function Home() {
     <main className="flex min-h-screen flex-col">
       <div className="flex gap-3 p-4 border-b">
         <ModelSelector onSelect={setUrn} />
-
         <input
           type="file"
           ref={fileRef}
