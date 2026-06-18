@@ -8,6 +8,7 @@ import AutodeskViewer, {
 } from "@/components/AutodeskViewer";
 import AnnotationToolbar from "@/components/AnnotationToolbar";
 import ModelSelector from "@/components/ModelSelector";
+import PdfWatermarkedViewer from "@/components/PdfWatermarkedViewer";
 import { uploadModel } from "@/api/modelApi";
 
 export default function Home() {
@@ -15,12 +16,19 @@ export default function Home() {
   const viewerHandle = useRef<AutodeskViewerHandle | null>(null);
   const [uploading, setUploading] = useState(false);
   const [urn, setUrn] = useState("");
+  const [pdfFile, setPdfFile] = useState<File | null>(null);
 
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
 
     if (!file) return;
+
+    // Detect PDF file
+    if (file.type === "application/pdf" || file.name.endsWith(".pdf")) {
+      setPdfFile(file);
+      return;
+    }
 
     try {
       setUploading(true);
@@ -37,6 +45,13 @@ export default function Home() {
     }
   };
 
+  if (pdfFile) {
+    return (
+      <main className="flex min-h-screen flex-col">
+        <PdfWatermarkedViewer initialFile={pdfFile} onClose={() => setPdfFile(null)} />
+      </main>
+    );
+  }
 
   return (
     <main className="flex min-h-screen flex-col">
