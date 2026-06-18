@@ -1,20 +1,22 @@
+// api/annotationApi.ts
 import { axiosInstance } from "@/service/axios";
 
 export async function saveAnnotation(payload: any) {
-  const { data } = await axiosInstance.post(
-    "/annotations",
-    payload
-  );
+  const { data } = await axiosInstance.post("/annotations", payload);
 
   return data;
 }
 
-export async function getAnnotations(
-  urn: string
-) {
+export async function getAnnotations(urn: string) {
   const { data } = await axiosInstance.get(
-    `/annotations?urn=${encodeURIComponent(urn)}`
+    `/annotations?urn=${encodeURIComponent(urn)}`,
   );
 
   return data;
 }
+
+export const saveMarkup = (data: any) => {
+  axiosInstance.post("/annotations", data);
+
+  return data;
+};
