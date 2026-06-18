@@ -1,36 +1,51 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Autodesk APS Viewer & PDF Watermark POC
+
+This repository contains proof-of-concept integrations for Autodesk APS CAD rendering, markup annotations, and an independent PDF watermark visualizer.
+
+## Features
+
+1. **CAD Model Annotation**: Renders 2D/3D CAD models using the Autodesk APS viewer. Users can draw markups, place images, and load stored annotations.
+2. **PDF Watermark Studio**: Visualizes custom dynamic watermark text overlays on PDF files using a modular React viewer powered by `react-doc-viewer`.
+
+---
+
+## Git Branching & Merging Strategy
+
+To maintain clean features and independent testing workspaces, follow these git guidelines:
+
+### 1. Default Branch
+*   **Default Branch**: `main`
+*   All feature development branches must originate from the `main` branch.
+
+### 2. Annotation Feature Branch
+*   **Origin**: Branched directly from `main`
+*   **Merge Target**: Must merge back into the `main` branch only.
+
+### 3. Watermark Feature Branch
+*   **Origin**: Branched directly from `main` (independent workspace)
+*   **Merge Target**: Must merge back into the `main` branch only.
+
+---
 
 ## Getting Started
 
-First, run the development server:
-
+### 1. Install Dependencies
+Run the package installation:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Configure Environment Variables
+Create a `.env` file in the root folder with your Autodesk API keys:
+```env
+APS_CLIENT_ID=your_client_id
+APS_CLIENT_SECRET=your_client_secret
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 3. Start the Development Server
+Run the local dev server:
+```bash
+npm run dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Open [http://localhost:3000](http://localhost:3000) inside your browser. Navigate to `/watermark` to access the PDF Watermark Studio directly, or upload files on `/` to auto-detect model vs document scopes.
