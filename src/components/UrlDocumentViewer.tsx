@@ -121,6 +121,36 @@ export default function UrlDocumentViewer() {
 
   return (
     <div className="flex flex-col flex-1 h-full min-h-0 bg-zinc-50 text-zinc-900">
+      {/* Top Header */}
+      <header className="flex items-center justify-between border-b border-zinc-200 bg-white px-6 py-4 shadow-sm">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-red-100 text-red-600 rounded-lg">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+          </div>
+          <div>
+            <h1 className="text-xl font-bold tracking-tight">PDF Watermark Studio (URL Mode)</h1>
+            <p className="text-xs text-zinc-500">Visualize custom dynamic watermarks on public document URLs.</p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <a
+            href="/annotation"
+            className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition-colors"
+          >
+            Go to Annotation Studio
+          </a>
+          <a
+            href="/"
+            className="px-3 py-1.5 rounded-lg bg-zinc-900 text-white text-xs font-semibold hover:bg-zinc-800 transition-colors"
+          >
+            Go to CAD Viewer
+          </a>
+        </div>
+      </header>
+
       {/* URL Entry / Preset Panel */}
       <div className="bg-white border-b border-zinc-200 p-6 shadow-sm flex flex-col gap-4">
         <form onSubmit={handleSubmit} className="flex gap-3 max-w-4xl w-full">
@@ -184,7 +214,7 @@ export default function UrlDocumentViewer() {
       {/* Main Workspace Layout */}
       <div className="flex-1 flex flex-col md:flex-row overflow-hidden min-h-0">
         {/* Left Sidebar (Watermark Settings) */}
-        <aside className="w-full md:w-80 border-r border-zinc-200 bg-zinc-50 p-4 md:p-6 overflow-y-auto shrink-0 flex flex-col gap-4">
+        {/* <aside className="w-full md:w-80 border-r border-zinc-200 bg-zinc-50 p-4 md:p-6 overflow-y-auto shrink-0 flex flex-col gap-4">
           <WatermarkControl settings={settings} onChange={setSettings} />
 
           <div className="p-4 border border-zinc-200 rounded-xl bg-white text-xs text-zinc-500 flex items-center gap-2">
@@ -206,7 +236,7 @@ export default function UrlDocumentViewer() {
               PDFs directly in this viewer.
             </span>
           </div>
-        </aside>
+        </aside> */}
 
         {/* Right Main Viewer */}
         <main className="flex-1 flex flex-col p-4 md:p-6 min-h-0 bg-zinc-50">
@@ -226,7 +256,7 @@ export default function UrlDocumentViewer() {
               <div className="flex-1 overflow-auto p-4 flex justify-center items-stretch min-h-0 relative select-none">
                 <div className="relative shadow-2xl border border-zinc-200 bg-white rounded flex-1 flex flex-col overflow-hidden">
                   {/* The Document Renderer Wrapper */}
-                  <DocViewerWrapper docs={docs} />
+                  <DocViewerWrapper docs={docs} readOnly={true} />
 
                   {/* Visual CSS Watermark Overlay */}
                   {settings.text && (

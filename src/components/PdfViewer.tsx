@@ -92,7 +92,7 @@ export default function PdfViewer({ file, watermarkSettings }: PdfViewerProps) {
           {file.name}
         </div>
         <div className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
-          Viewer via react-doc-viewer
+          Viewer via Nutrient SDK
         </div>
       </div>
 
@@ -101,7 +101,7 @@ export default function PdfViewer({ file, watermarkSettings }: PdfViewerProps) {
         {/* Document & Watermark Container */}
         <div className="relative shadow-2xl border border-zinc-200 dark:border-zinc-800 bg-white rounded flex-1 flex flex-col overflow-hidden">
           {/* DocViewer Renderer Wrapper */}
-          <DocViewerWrapper docs={docs} />
+          <DocViewerWrapper docs={docs} readOnly={true} />
 
           {/* CSS Watermark Overlay */}
           {watermarkSettings.text && (

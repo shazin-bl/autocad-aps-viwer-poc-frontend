@@ -149,6 +149,12 @@ export default function PdfWatermarkedViewer({
               Close Document
             </button>
             <a
+              href="/annotation"
+              className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition-colors"
+            >
+              Go to Annotation Studio
+            </a>
+            <a
               href="/"
               className="px-3 py-1.5 rounded-lg bg-zinc-900 dark:bg-zinc-50 text-white dark:text-zinc-900 text-xs font-semibold hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-colors"
             >

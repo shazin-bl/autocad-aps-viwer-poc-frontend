@@ -1,84 +1,82 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import DocViewer, { DocViewerRenderers } from "react-doc-viewer";
-import { pdfjs } from "react-pdf";
-import { StyleSheetManager } from "styled-components";
-
-// Import react-pdf core stylesheets to remove TextLayer and AnnotationLayer warning logs
-import "react-pdf/dist/Page/AnnotationLayer.css";
-import "react-pdf/dist/Page/TextLayer.css";
-
-// Point to the local worker file served from the Next.js public directory
-if (typeof window !== "undefined") {
-  pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
-}
+import React, { useEffect, useRef, useState } from "react";
 
 interface DocViewerWrapperProps {
   docs: Array<{ uri: string; fileType?: string; fileName?: string }>;
+  readOnly?: boolean;
 }
 
-export default function DocViewerWrapper({ docs }: DocViewerWrapperProps) {
-  const [mounted, setMounted] = useState(false);
+export default function DocViewerWrapper({ docs, readOnly = true }: DocViewerWrapperProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [loading, setLoading] = useState(true);
+  
 
   useEffect(() => {
-    setMounted(true);
-  }, []);
+    const container = containerRef.current;
+    if (!container || docs.length === 0 || !docs[0].uri) return;
 
-  if (!mounted) {
-    return (
-      <div className="w-full h-full min-h-0 flex-1 bg-white dark:bg-zinc-900 rounded-lg flex items-center justify-center">
-         <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-      </div>
-    );
-  }
+    let cleanup = () => {};
 
-  const shouldForwardProp = (prop: string) => {
-    return !["documents", "pluginRenderers", "config", "theme", "last"].includes(prop);
-  };
+    (async () => {
+      setLoading(true);
+      try {
+        const NutrientViewer = (await import("@nutrient-sdk/viewer")).default;
+        // Call early — for example, on app init or after login.
+        NutrientViewer.preloadWorker({ useCDN: true } as any);
+        // Ensure any previous instance is unloaded
+        NutrientViewer.unload(container);
+
+        // Filter out print and download if in readOnly mode
+        const defaultItems = [...NutrientViewer.defaultToolbarItems];
+        const customToolbarItems = readOnly
+          ? defaultItems.filter(
+              (item: any) => item.type !== "print" && item.type !== "export-pdf"
+            )
+          : defaultItems;
+
+        // Load the document using standalone WASM viewer from CDN
+        const instance = await NutrientViewer.load({
+          container,
+          useCDN: true,
+          document: docs[0].uri,
+          initialViewState: new NutrientViewer.ViewState({
+            readOnly: readOnly,
+          }),
+          toolbarItems: customToolbarItems,
+        });
+
+        console.log("Nutrient SDK Viewer loaded successfully with readOnly =", readOnly);
+        setLoading(false);
+
+        cleanup = () => {
+          NutrientViewer.unload(container);
+        };
+      } catch (error) {
+        console.error("Failed to load Nutrient SDK Viewer:", error);
+        setLoading(false);
+      }
+    })();
+
+    return () => {
+      cleanup();
+    };
+  }, [docs, readOnly]);
 
   return (
-    <div className="w-full h-full min-h-0 flex-1 overflow-auto bg-white dark:bg-zinc-900 rounded-lg flex flex-col">
-      <style>{`
-        #react-doc-viewer {
-          background-color: transparent !important;
-          height: 100% !important;
-          width: 100% !important;
-          display: flex !important;
-          flex-direction: column !important;
-        }
-        #react-doc-viewer iframe {
-          width: 100% !important;
-          height: 100% !important;
-          border: none !important;
-        }
-        #pdf-renderer {
-          height: 100% !important;
-          width: 100% !important;
-        }
-      `}</style>
-      <StyleSheetManager shouldForwardProp={shouldForwardProp}>
-        <DocViewer
-          documents={docs}
-          pluginRenderers={DocViewerRenderers}
-          config={{
-            header: {
-              disableHeader: true,
-              disableFileName: true,
-              retainURLParams: false,
-            },
-          }}
-          theme={{
-            primary: "#3B82F6", // blue-500 matching our design
-            secondary: "#1F2937",
-            tertiary: "#F3F4F6",
-            text_primary: "#111827",
-            text_secondary: "#6B7280",
-            text_tertiary: "#9CA3AF",
-            // disable_theme_scrollbar: true,
-          }}
-        />
-      </StyleSheetManager>
+    <div className="w-full h-full min-h-0 flex-1 relative flex flex-col bg-white dark:bg-zinc-900 rounded-lg overflow-hidden">
+      {/* <h1>hello</h1> */}
+      {loading && (
+        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-white/80 dark:bg-zinc-900/80 gap-3">
+          <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">Loading Document Viewer...</p>
+        </div>
+      )}
+      <div 
+        ref={containerRef} 
+        className="w-full h-full min-h-[500px]" 
+        style={{ flex: 1 }}
+      />
     </div>
   );
 }

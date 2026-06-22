@@ -1,0 +1,368 @@
+"use client";
+
+import React, { useState, useRef, useEffect } from "react";
+import DocViewerWrapper from "./DocViewerWrapper";
+
+const PRESETS = [
+  {
+    name: "Sample PDF File",
+    url: "https://www.aeee.in/wp-content/uploads/2020/08/Sample-pdf.pdf",
+    description: "A standard PDF document with pages",
+  },
+  {
+    name: "Sample DOCX (Word)",
+    url: "https://raw.githubusercontent.com/plutext/AndroidDocxToHtml/master/res/raw/sample.docx",
+    description: "Sample Word document with simple text formatting",
+  },
+  {
+    name: "Sample PPTX (PowerPoint)",
+    url: "https://raw.githubusercontent.com/jessehouwing/ppt-diffmerge/main/sample.pptx",
+    description: "Sample PowerPoint presentation with multiple slides",
+  },
+];
+
+export default function AnnotationViewer({
+  readOnly = false,
+}: {
+  readOnly?: boolean;
+}) {
+  const [fileUrl, setFileUrl] = useState<string>("");
+  const [fileName, setFileName] = useState<string>("");
+  const [inputUrl, setInputUrl] = useState<string>(PRESETS[0].url);
+  const [dragActive, setDragActive] = useState<boolean>(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Clean up Blob URLs to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      if (fileUrl && fileUrl.startsWith("blob:")) {
+        URL.revokeObjectURL(fileUrl);
+      }
+    };
+  }, [fileUrl]);
+
+  const handleDrag = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true);
+    } else if (e.type === "dragleave") {
+      setDragActive(false);
+    }
+  };
+
+  const isSupportedFile = (file: File) => {
+    const supportedExtensions = [
+      "pdf",
+      "doc",
+      "docx",
+      "xls",
+      "xlsx",
+      "ppt",
+      "pptx",
+      "txt",
+      "png",
+      "jpg",
+      "jpeg",
+      "gif",
+      "bmp",
+    ];
+    const ext = file.name.split(".").pop()?.toLowerCase() || "";
+    return (
+      supportedExtensions.includes(ext) ||
+      file.type.startsWith("image/") ||
+      file.type === "application/pdf" ||
+      file.type === "text/plain"
+    );
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      const droppedFile = e.dataTransfer.files[0];
+      if (isSupportedFile(droppedFile)) {
+        if (fileUrl && fileUrl.startsWith("blob:")) {
+          URL.revokeObjectURL(fileUrl);
+        }
+        const url = URL.createObjectURL(droppedFile);
+        setFileUrl(url);
+        setFileName(droppedFile.name);
+      } else {
+        alert(
+          "Unsupported file type. Please upload a PDF, Word, Excel, PowerPoint, Text, or Image file.",
+        );
+      }
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const selectedFile = e.target.files[0];
+      if (isSupportedFile(selectedFile)) {
+        if (fileUrl && fileUrl.startsWith("blob:")) {
+          URL.revokeObjectURL(fileUrl);
+        }
+        const url = URL.createObjectURL(selectedFile);
+        setFileUrl(url);
+        setFileName(selectedFile.name);
+      } else {
+        alert(
+          "Unsupported file type. Please upload a PDF, Word, Excel, PowerPoint, Text, or Image file.",
+        );
+      }
+    }
+  };
+
+  const handleUrlSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (inputUrl.trim()) {
+      if (fileUrl && fileUrl.startsWith("blob:")) {
+        URL.revokeObjectURL(fileUrl);
+      }
+      setFileUrl(inputUrl.trim());
+      setFileName(getFileNameFromUrl(inputUrl.trim()));
+    }
+  };
+
+  const getFileNameFromUrl = (urlStr: string) => {
+    try {
+      const parsed = new URL(urlStr);
+      const pathname = parsed.pathname;
+      return (
+        pathname.substring(pathname.lastIndexOf("/") + 1) || "Remote Document"
+      );
+    } catch {
+      return "Remote Document";
+    }
+  };
+
+  const getFileType = (name: string) => {
+    return name.split(".").pop()?.toLowerCase() || "";
+  };
+
+  const clearDocument = () => {
+    if (fileUrl && fileUrl.startsWith("blob:")) {
+      URL.revokeObjectURL(fileUrl);
+    }
+    setFileUrl("");
+    setFileName("");
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const docs = fileUrl
+    ? [{ uri: fileUrl, fileType: getFileType(fileName), fileName }]
+    : [];
+
+  return (
+    <div className="flex flex-col flex-1 h-full min-h-0 bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-50">
+      {/* Top Header */}
+      <header className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-6 py-4 shadow-sm">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg">
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+              />
+            </svg>
+          </div>
+          <div>
+            <h1 className="text-xl font-bold tracking-tight">
+              {readOnly
+                ? "PDF & Doc Reader Studio"
+                : "PDF & Doc Annotation Studio"}
+            </h1>
+            <p className="text-xs text-zinc-500 dark:text-zinc-400">
+              {readOnly
+                ? "View and read your documents using Nutrient Web SDK."
+                : "Draw, write, sign, and markup your documents using Nutrient Web SDK."}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          {fileUrl && (
+            <button
+              onClick={clearDocument}
+              className="px-3 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800 text-xs font-semibold hover:bg-zinc-50 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-400 transition-colors"
+            >
+              Close Document
+            </button>
+          )}
+          <a
+            href="/"
+            className="px-3 py-1.5 rounded-lg bg-zinc-900 dark:bg-zinc-50 text-white dark:text-zinc-900 text-xs font-semibold hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-colors"
+          >
+            Go to CAD Viewer
+          </a>
+        </div>
+      </header>
+
+      {/* Main Content Workspace */}
+      <div className="flex-1 flex flex-col overflow-hidden min-h-0">
+        {!fileUrl ? (
+          /* Landing Screen: Choose Document Sources */
+          <div className="flex-1 overflow-auto p-8 flex flex-col items-center justify-center gap-8 bg-zinc-50 dark:bg-zinc-950">
+            <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-8">
+              {/* Box 1: Local Upload */}
+              <div
+                onDragEnter={handleDrag}
+                onDragOver={handleDrag}
+                onDragLeave={handleDrag}
+                onDrop={handleDrop}
+                onClick={() => fileInputRef.current?.click()}
+                className={`p-10 border-2 border-dashed rounded-2xl flex flex-col items-center justify-center gap-5 cursor-pointer bg-white dark:bg-zinc-900 transition-all duration-300 shadow-md ${
+                  dragActive
+                    ? "border-blue-500 bg-blue-50/50 dark:bg-blue-950/20 scale-102"
+                    : "border-zinc-300 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-700 hover:shadow-lg hover:scale-101"
+                }`}
+              >
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                  accept=".pdf,.docx,.doc,.xlsx,.xls,.pptx,.ppt,.txt,.csv,.png,.jpg,.jpeg,.gif,.bmp,image/*,text/plain,application/pdf"
+                  className="hidden"
+                />
+                <div className="p-4 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-full">
+                  <svg
+                    className="w-10 h-10"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1.5}
+                      d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                    />
+                  </svg>
+                </div>
+                <div className="text-center">
+                  <h3 className="text-base font-bold text-zinc-900 dark:text-zinc-100">
+                    Upload Local Document
+                  </h3>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
+                    Drag and drop or browse files from your computer
+                  </p>
+                </div>
+              </div>
+
+              {/* Box 2: Remote URL & Presets */}
+              <div className="p-8 border border-zinc-200 dark:border-zinc-800 rounded-2xl bg-white dark:bg-zinc-900 shadow-md flex flex-col justify-between gap-5">
+                <div>
+                  <h3 className="text-base font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
+                    <svg
+                      className="w-5 h-5 text-zinc-500"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
+                      />
+                    </svg>
+                    Load Document from URL
+                  </h3>
+                  <form onSubmit={handleUrlSubmit} className="flex gap-2 mt-4">
+                    <input
+                      type="text"
+                      value={inputUrl}
+                      onChange={(e) => setInputUrl(e.target.value)}
+                      placeholder="Paste a public PDF/document URL..."
+                      className="flex-1 px-3 py-2 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-transparent text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    <button
+                      type="submit"
+                      className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs transition-colors shadow-sm cursor-pointer"
+                    >
+                      Load
+                    </button>
+                  </form>
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">
+                    Test Preset Files:
+                  </span>
+                  <div className="grid grid-cols-3 gap-2">
+                    {PRESETS.map((preset) => (
+                      <button
+                        key={preset.name}
+                        onClick={() => {
+                          if (fileUrl && fileUrl.startsWith("blob:")) {
+                            URL.revokeObjectURL(fileUrl);
+                          }
+                          setFileUrl(preset.url);
+                          setFileName(preset.name);
+                        }}
+                        className="text-left p-2.5 rounded-lg border border-zinc-200 dark:border-zinc-800 hover:border-blue-500 bg-zinc-50 dark:bg-zinc-800/50 hover:bg-white dark:hover:bg-zinc-800 transition-all flex flex-col justify-between h-16 cursor-pointer"
+                      >
+                        <span className="text-[10px] font-bold text-zinc-800 dark:text-zinc-200 line-clamp-1">
+                          {preset.name}
+                        </span>
+                        <span className="text-[8px] text-zinc-500 dark:text-zinc-400 line-clamp-1 leading-none">
+                          {preset.description}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          /* Active Document Viewer Panel */
+          <main className="flex-1 flex flex-col p-4 md:p-6 min-h-0 bg-zinc-50 dark:bg-zinc-950">
+            <div className="flex flex-col flex-1 h-full min-h-0 bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 overflow-hidden shadow-sm">
+              {/* Document Info Bar */}
+              <div className="flex items-center justify-between gap-3 px-4 py-2.5 bg-zinc-50 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 shrink-0">
+                <div className="text-xs font-semibold text-zinc-900 dark:text-zinc-100 truncate max-w-[50%]">
+                  {fileName}
+                </div>
+                <div className="flex items-center gap-2">
+                  {readOnly ? (
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">
+                      Read-Only Mode
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400">
+                      <span className="w-1.5 h-1.5 mr-1.5 bg-green-500 rounded-full animate-pulse"></span>
+                      Annotation Mode Active
+                    </span>
+                  )}
+                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 uppercase">
+                    {getFileType(fileName) || "unknown"}
+                  </span>
+                </div>
+              </div>
+
+              {/* Dynamic WASM Viewer Container */}
+              <div className="flex-1 p-4 flex justify-center items-stretch min-h-0 relative">
+                <div className="relative shadow-lg border border-zinc-200 dark:border-zinc-800 bg-white rounded flex-1 flex flex-col overflow-hidden">
+                  <DocViewerWrapper docs={docs} readOnly={readOnly} />
+                </div>
+              </div>
+            </div>
+          </main>
+        )}
+      </div>
+    </div>
+  );
+}
