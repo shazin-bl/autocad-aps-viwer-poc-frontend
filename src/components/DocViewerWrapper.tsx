@@ -28,13 +28,13 @@ export default function DocViewerWrapper({ docs }: DocViewerWrapperProps) {
   if (!mounted) {
     return (
       <div className="w-full h-full min-h-0 flex-1 bg-white dark:bg-zinc-900 rounded-lg flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+         <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
 
   const shouldForwardProp = (prop: string) => {
-    return !["documents", "pluginRenderers", "config", "theme"].includes(prop);
+    return !["documents", "pluginRenderers", "config", "theme", "last"].includes(prop);
   };
 
   return (
