@@ -8,6 +8,7 @@ import AutodeskViewer, {
 } from "@/components/AutodeskViewer";
 import AnnotationToolbar from "@/components/AnnotationToolbar";
 import ModelSelector from "@/components/ModelSelector";
+import PdfWatermarkedViewer from "@/components/PdfWatermarkedViewer";
 import { uploadModel } from "@/api/modelApi";
 
 export default function Home() {
@@ -15,12 +16,33 @@ export default function Home() {
   const viewerHandle = useRef<AutodeskViewerHandle | null>(null);
   const [uploading, setUploading] = useState(false);
   const [urn, setUrn] = useState("");
+  const [pdfFile, setPdfFile] = useState<File | null>(null);
 
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
 
     if (!file) return;
+
+    const isDocumentFile = (f: File) => {
+      const supportedExtensions = [
+        "pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx",
+        "txt", "png", "jpg", "jpeg", "gif", "bmp"
+      ];
+      const ext = f.name.split('.').pop()?.toLowerCase() || "";
+      return (
+        supportedExtensions.includes(ext) ||
+        f.type.startsWith("image/") ||
+        f.type === "application/pdf" ||
+        f.type === "text/plain"
+      );
+    };
+
+    // Detect PDF, Word, Excel, PowerPoint, Text, or Image files
+    if (isDocumentFile(file)) {
+      setPdfFile(file);
+      return;
+    }
 
     try {
       setUploading(true);
@@ -37,6 +59,13 @@ export default function Home() {
     }
   };
 
+  if (pdfFile) {
+    return (
+      <main className="flex min-h-screen flex-col">
+        <PdfWatermarkedViewer initialFile={pdfFile} onClose={() => setPdfFile(null)} />
+      </main>
+    );
+  }
 
   return (
     <main className="flex min-h-screen flex-col">
