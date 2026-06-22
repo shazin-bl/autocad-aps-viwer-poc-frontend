@@ -45,6 +45,31 @@ export default function PdfWatermarkedViewer({
     }
   };
 
+  const isSupportedFile = (file: File) => {
+    const supportedExtensions = [
+      "pdf",
+      "doc",
+      "docx",
+      "xls",
+      "xlsx",
+      "ppt",
+      "pptx",
+      "txt",
+      "png",
+      "jpg",
+      "jpeg",
+      "gif",
+      "bmp",
+    ];
+    const ext = file.name.split(".").pop()?.toLowerCase() || "";
+    return (
+      supportedExtensions.includes(ext) ||
+      file.type.startsWith("image/") ||
+      file.type === "application/pdf" ||
+      file.type === "text/plain"
+    );
+  };
+
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -52,13 +77,12 @@ export default function PdfWatermarkedViewer({
 
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       const droppedFile = e.dataTransfer.files[0];
-      if (
-        droppedFile.type === "application/pdf" ||
-        droppedFile.name.endsWith(".pdf")
-      ) {
+      if (isSupportedFile(droppedFile)) {
         setFile(droppedFile);
       } else {
-        alert("Please select a valid PDF file.");
+        alert(
+          "Unsupported file type. Please upload a PDF, Word, Excel, PowerPoint, Text, or Image file.",
+        );
       }
     }
   };
@@ -66,13 +90,12 @@ export default function PdfWatermarkedViewer({
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const selectedFile = e.target.files[0];
-      if (
-        selectedFile.type === "application/pdf" ||
-        selectedFile.name.endsWith(".pdf")
-      ) {
+      if (isSupportedFile(selectedFile)) {
         setFile(selectedFile);
       } else {
-        alert("Please select a valid PDF file.");
+        alert(
+          "Unsupported file type. Please upload a PDF, Word, Excel, PowerPoint, Text, or Image file.",
+        );
       }
     }
   };
@@ -156,7 +179,7 @@ export default function PdfWatermarkedViewer({
                 type="file"
                 ref={fileInputRef}
                 onChange={handleFileChange}
-                accept=".pdf,application/pdf"
+                accept=".pdf,.docx,.doc,.xlsx,.xls,.pptx,.ppt,.txt,.csv,.png,.jpg,.jpeg,.gif,.bmp,image/*,text/plain,application/pdf"
                 className="hidden"
               />
 
@@ -184,7 +207,8 @@ export default function PdfWatermarkedViewer({
                   or click to browse from your device
                 </p>
                 <span className="inline-block mt-3 px-3 py-1 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 rounded-full text-xs font-semibold">
-                  Only PDF files are supported
+                  PDF, Word, Excel, PowerPoint, Text, or Image files are
+                  supported
                 </span>
               </div>
             </div>

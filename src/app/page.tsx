@@ -24,8 +24,22 @@ export default function Home() {
 
     if (!file) return;
 
-    // Detect PDF file
-    if (file.type === "application/pdf" || file.name.endsWith(".pdf")) {
+    const isDocumentFile = (f: File) => {
+      const supportedExtensions = [
+        "pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx",
+        "txt", "png", "jpg", "jpeg", "gif", "bmp"
+      ];
+      const ext = f.name.split('.').pop()?.toLowerCase() || "";
+      return (
+        supportedExtensions.includes(ext) ||
+        f.type.startsWith("image/") ||
+        f.type === "application/pdf" ||
+        f.type === "text/plain"
+      );
+    };
+
+    // Detect PDF, Word, Excel, PowerPoint, Text, or Image files
+    if (isDocumentFile(file)) {
       setPdfFile(file);
       return;
     }

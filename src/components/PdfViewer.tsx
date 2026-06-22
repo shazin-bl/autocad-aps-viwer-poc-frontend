@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from "react";
-import dynamic from "next/dynamic";
 import { WatermarkSettings } from "@/types/watermark";
+import DocViewerWrapper from "./DocViewerWrapper";
 
 // Dynamically import the wrapper to prevent SSR compilation errors in Next.js
-const DocViewerWrapper = dynamic(() => import("./DocViewerWrapper"), { ssr: false });
 
 interface PdfViewerProps {
   file: File;
@@ -52,7 +51,7 @@ export default function PdfViewer({ file, watermarkSettings }: PdfViewerProps) {
       // Repeated grid/tile SVG background
       const svgWidth = Math.max(160, scaledFontSize * 6);
       const svgHeight = Math.max(120, scaledFontSize * 4.5);
-      
+
       const svgString = `
         <svg xmlns="http://www.w3.org/2000/svg" width="${svgWidth}" height="${svgHeight}">
           <text 
@@ -62,11 +61,11 @@ export default function PdfViewer({ file, watermarkSettings }: PdfViewerProps) {
             dominant-baseline="middle" 
             font-family="Inter, system-ui, sans-serif" 
             font-size="${scaledFontSize}px" 
-            font-weight="${watermarkSettings.bold ? 'bold' : 'normal'}" 
-            font-style="${watermarkSettings.italic ? 'italic' : 'normal'}" 
+            font-weight="${watermarkSettings.bold ? "bold" : "normal"}" 
+            font-style="${watermarkSettings.italic ? "italic" : "normal"}" 
             fill="${watermarkSettings.color}" 
             opacity="${watermarkSettings.opacity}" 
-            transform="rotate(${watermarkSettings.rotation}, ${svgWidth/2}, ${svgHeight/2})"
+            transform="rotate(${watermarkSettings.rotation}, ${svgWidth / 2}, ${svgHeight / 2})"
           >
             ${watermarkSettings.text || "WATERMARK"}
           </text>
@@ -81,7 +80,9 @@ export default function PdfViewer({ file, watermarkSettings }: PdfViewerProps) {
     }
   };
 
-  const docs = [{ uri: fileUrl, fileType: "pdf", fileName: file.name }];
+  // Dynamically resolve fileType from file extension
+  const extension = file.name.split(".").pop()?.toLowerCase() || "";
+  const docs = [{ uri: fileUrl, fileType: extension, fileName: file.name }];
 
   return (
     <div className="flex flex-col flex-1 h-full min-h-0 bg-zinc-100 dark:bg-zinc-950 rounded-2xl border border-zinc-200 dark:border-zinc-900 overflow-hidden">
@@ -112,7 +113,10 @@ export default function PdfViewer({ file, watermarkSettings }: PdfViewerProps) {
                   </div>
                 </div>
               ) : (
-                <div className="absolute inset-0" style={getWatermarkStyle() as React.CSSProperties} />
+                <div
+                  className="absolute inset-0"
+                  style={getWatermarkStyle() as React.CSSProperties}
+                />
               )}
             </div>
           )}
